@@ -1,0 +1,10 @@
+.direnv/
+result
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+!example.tfvars
