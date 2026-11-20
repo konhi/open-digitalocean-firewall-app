@@ -64,8 +64,11 @@ nix shell nixpkgs#valkey -c valkey-cli --tls -t 10 \
 
 ### Destroy
 
+Always tear down the test infrastructure when done testing so database instances don't incur ongoing charges:
+
 ```sh
-tofu destroy
+cd infra/testing
+tofu destroy -auto-approve
 ```
 
 Without the `:delete` scopes the API returns `403 You are not authorized to perform this operation` and nothing is deleted. A failed destroy still clears the outputs in state; restore them with `tofu apply -refresh-only`.
