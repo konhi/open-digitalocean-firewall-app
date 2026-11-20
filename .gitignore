@@ -5,6 +5,13 @@ result
 .terraform/
 *.tfstate
 *.tfstate.*
+*.tfplan
 crash.log
 *.tfvars
 !example.tfvars
+
+# Local secrets
+.env.local
+
+# APM
+apm_modules/

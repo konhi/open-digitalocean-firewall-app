@@ -1,0 +1,20 @@
+name: open-digitalocean-firewall-app
+version: 1.0.0
+description: Open DigitalOcean Firewall App agent configuration
+author: Jan Szymański
+# Which agent platforms to deploy to.
+# Resolution order: --target flag > this field > auto-detect from filesystem.
+# Accepted values: agent-skills, antigravity, claude, codex, copilot, cursor, gemini, grok-bot, grok-build, hermes, kiro, opencode, vscode, windsurf
+targets:
+  - antigravity
+dependencies:
+  apm:
+    - hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+  mcp: []
+includes: auto
+scripts: {}
+compilation:
+  strategy: single-file
+  single_file: true
+  agents_md:
+    mode: managed_section

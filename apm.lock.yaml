@@ -1,0 +1,86 @@
+lockfile_version: '1'
+apm_version: 0.36.0
+dependencies:
+- repo_url: hashicorp/agent-skills
+  name: terraform-style-guide
+  host: github.com
+  resolved_commit: 5e30fa5c867ba6777c37e4206babfd08049c396f
+  version: unknown
+  virtual_path: plugins/terraform/skills/terraform-style-guide
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/terraform-style-guide
+  - .agents/skills/terraform-style-guide/LICENSE
+  - .agents/skills/terraform-style-guide/SECURITY.md
+  - .agents/skills/terraform-style-guide/SKILL.md
+  deployed_file_hashes:
+    .agents/skills/terraform-style-guide/LICENSE: sha256:3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04
+    .agents/skills/terraform-style-guide/SECURITY.md: sha256:3dc8ffa10139e9772c5c102fee6377f66f5167bd043a7c43e6e5df682dc75f92
+    .agents/skills/terraform-style-guide/SKILL.md: sha256:3a5c2e06a1daa07600d03f48328d1479284e7a9d59d66b2663693ca972080e22
+  content_hash: sha256:3b914c5ae01a7101d45b5222fbc38e0be6eb7412deba5f54d471905f22af70c6
+  carried_licenses:
+  - path: LICENSE
+    source: LICENSE
+    hash: sha256:3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04
+deployments:
+- kind: project-relative
+  target: antigravity
+  value: .agents/rules/environment-tooling.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:cb812b4f452813dbc83775138a243febc471a182aef1b6826a7acb3844bbf7b3
+- kind: project-relative
+  target: antigravity
+  value: .agents/rules/project-rules.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:5649d72b4630ef634b9e079f817055c0c430071697a50f81af6a7ecbeadc1399
+- kind: project-relative
+  target: antigravity
+  value: .agents/skills/terraform-style-guide
+  runtime: null
+  scope: project
+  owners:
+  - hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+  active_owner: hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+  content_hash: null
+- kind: project-relative
+  target: antigravity
+  value: .agents/skills/terraform-style-guide/LICENSE
+  runtime: null
+  scope: project
+  owners:
+  - hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+  active_owner: hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+  content_hash: sha256:3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04
+- kind: project-relative
+  target: antigravity
+  value: .agents/skills/terraform-style-guide/SECURITY.md
+  runtime: null
+  scope: project
+  owners:
+  - hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+  active_owner: hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+  content_hash: sha256:3dc8ffa10139e9772c5c102fee6377f66f5167bd043a7c43e6e5df682dc75f92
+- kind: project-relative
+  target: antigravity
+  value: .agents/skills/terraform-style-guide/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+  active_owner: hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+  content_hash: sha256:3a5c2e06a1daa07600d03f48328d1479284e7a9d59d66b2663693ca972080e22
+local_deployed_files:
+- .agents/rules/environment-tooling.md
+- .agents/rules/project-rules.md
+local_deployed_file_hashes:
+  .agents/rules/environment-tooling.md: sha256:cb812b4f452813dbc83775138a243febc471a182aef1b6826a7acb3844bbf7b3
+  .agents/rules/project-rules.md: sha256:5649d72b4630ef634b9e079f817055c0c430071697a50f81af6a7ecbeadc1399
