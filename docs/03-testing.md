@@ -3,6 +3,7 @@
 Part of [Contributing to Open DigitalOcean Firewall App](../CONTRIBUTING.md).
 
 Open DigitalOcean Firewall App is tested against a DigitalOcean project created with IaC ([OpenTofu](https://opentofu.org)). Valkey was chosen as the engine for convenience: it is the cheapest and fastest managed database to provision.
+
 ## Test infrastructure
 
 The configuration lives in [`infra/testing`](../infra/testing) and creates:
@@ -60,8 +61,6 @@ nix shell nixpkgs#valkey -c valkey-cli --tls -t 10 \
 
 `Operation timed out` means the firewall blocked you. `NOAUTH Authentication required.` means you got through. That's expected once your IP is a trusted source, and a problem otherwise.
 
-`tofu output -raw database_uri` prints the connection string. It only includes the password if the token has `database:view_credentials`.
-
 ### Destroy
 
 Always tear down the test infrastructure when done testing so database instances don't incur ongoing charges:
@@ -70,8 +69,6 @@ Always tear down the test infrastructure when done testing so database instances
 cd infra/testing
 tofu destroy -auto-approve
 ```
-
-Without the `:delete` scopes the API returns `403 You are not authorized to perform this operation` and nothing is deleted. A failed destroy still clears the outputs in state; restore them with `tofu apply -refresh-only`.
 
 ### Checks
 

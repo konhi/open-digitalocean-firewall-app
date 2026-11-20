@@ -26,12 +26,6 @@ Open DigitalOcean Firewall App talks to DigitalOcean with a personal access toke
 
 The app itself only needs `database:read` and `database:update`. The other scopes are for the [test infrastructure](03-testing.md).
 
-#### Optional
-
-| Scope | Why |
-| --- | --- |
-| `database:view_credentials` | Show the database password. Without it the API leaves the password empty, so `tofu output database_uri` has no credentials. Neither the app nor OpenTofu needs it otherwise |
-
 Trusted sources that reference Droplets, tags, Kubernetes clusters or App Platform apps can only be resolved to names with the matching `:read` scope (e.g. `droplet:read`, `tag:read`).
 
 ### Store the token
@@ -43,7 +37,3 @@ Copy [`.env.local.example`](../.env.local.example) to `.env.local` and paste the
 ```sh
 doctl auth init --access-token "$DIGITALOCEAN_TOKEN"
 ```
-
-If you rotate the token, update `.env.local` and run `doctl auth init` again. Otherwise `doctl` keeps using the old one and fails with `401 Unable to authenticate you`.
-
-> Scope names follow DigitalOcean's `<resource>:<read|create|update|delete>` convention. Confirm them in the token creation UI if anything is rejected.
