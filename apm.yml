@@ -10,6 +10,9 @@ targets:
 dependencies:
   apm:
     - hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+    - git: miqdadbadjuber/anti-slop
+      skills:
+        - antislop-code
   mcp: []
 includes: auto
 scripts: {}

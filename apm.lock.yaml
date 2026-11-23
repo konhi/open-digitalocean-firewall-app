@@ -23,6 +23,59 @@ dependencies:
   - path: LICENSE
     source: LICENSE
     hash: sha256:3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04
+- repo_url: miqdadbadjuber/anti-slop
+  name: antislop
+  host: github.com
+  resolved_commit: 44b3547ed6d6f21eed777271602da113efc53c94
+  version: 44b3547
+  package_type: skill_bundle
+  deployed_files:
+  - .agents/skills/antislop-code
+  - .agents/skills/antislop-code/LICENSE
+  - .agents/skills/antislop-code/SKILL.md
+  deployed_file_hashes:
+    .agents/skills/antislop-code/LICENSE: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+    .agents/skills/antislop-code/SKILL.md: sha256:cac8f34af374f085900fd9b211a92fdfb387f63826571e1221cfb927fb31a5ca
+  content_hash: sha256:4106e1a235fbe8f466665d7067f2c885f66863f8eca286f78a0cc4ac0bacf7cd
+  skill_subset:
+  - antislop-code
+  carried_licenses:
+  - path: .apm/skills/antislop-code/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: .apm/skills/antislop-copywriting/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: .apm/skills/antislop-human/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: .apm/skills/antislop-layoutmobile/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: .apm/skills/antislop-ui/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: .apm/skills/antislop/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: skills/antislop-code/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: skills/antislop-copywriting/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: skills/antislop-human/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: skills/antislop-layoutmobile/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: skills/antislop-ui/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+  - path: skills/antislop/LICENSE
+    source: LICENSE
+    hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
 deployments:
 - kind: project-relative
   target: antigravity
@@ -41,7 +94,34 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: sha256:5649d72b4630ef634b9e079f817055c0c430071697a50f81af6a7ecbeadc1399
+  content_hash: sha256:852b34e2a12933da6c1404da111b6895d93b0b72a18c2d9d5d232925229447ad
+- kind: project-relative
+  target: antigravity
+  value: .agents/skills/antislop-code
+  runtime: null
+  scope: project
+  owners:
+  - miqdadbadjuber/anti-slop
+  active_owner: miqdadbadjuber/anti-slop
+  content_hash: null
+- kind: project-relative
+  target: antigravity
+  value: .agents/skills/antislop-code/LICENSE
+  runtime: null
+  scope: project
+  owners:
+  - miqdadbadjuber/anti-slop
+  active_owner: miqdadbadjuber/anti-slop
+  content_hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+- kind: project-relative
+  target: antigravity
+  value: .agents/skills/antislop-code/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - miqdadbadjuber/anti-slop
+  active_owner: miqdadbadjuber/anti-slop
+  content_hash: sha256:cac8f34af374f085900fd9b211a92fdfb387f63826571e1221cfb927fb31a5ca
 - kind: project-relative
   target: antigravity
   value: .agents/skills/terraform-style-guide
@@ -83,4 +163,4 @@ local_deployed_files:
 - .agents/rules/project-rules.md
 local_deployed_file_hashes:
   .agents/rules/environment-tooling.md: sha256:cb812b4f452813dbc83775138a243febc471a182aef1b6826a7acb3844bbf7b3
-  .agents/rules/project-rules.md: sha256:5649d72b4630ef634b9e079f817055c0c430071697a50f81af6a7ecbeadc1399
+  .agents/rules/project-rules.md: sha256:852b34e2a12933da6c1404da111b6895d93b0b72a18c2d9d5d232925229447ad

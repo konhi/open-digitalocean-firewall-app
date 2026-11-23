@@ -1,5 +1,6 @@
 .direnv/
 result
+bin/
 
 # Terraform
 .terraform/

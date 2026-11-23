@@ -4,7 +4,7 @@ Part of [Contributing to Open DigitalOcean Firewall App](../CONTRIBUTING.md).
 
 ## Development environment
 
-We use a [Nix flake](../flake.nix) to provide the tools you need ([OpenTofu](https://opentofu.org), [`terraform-ls`](https://github.com/hashicorp/terraform-ls), [`tflint`](https://github.com/terraform-linters/tflint), [`doctl`](https://docs.digitalocean.com/reference/doctl/) and [`apm`](https://github.com/microsoft/apm)), and [direnv](https://direnv.net) to load them automatically when you enter the project directory.
+We use a [Nix flake](../flake.nix) to provide the tools you need ([Go](https://go.dev), [`gopls`](https://pkg.go.dev/golang.org/x/tools/gopls), [OpenTofu](https://opentofu.org), [`terraform-ls`](https://github.com/hashicorp/terraform-ls), [`tflint`](https://github.com/terraform-linters/tflint), [`doctl`](https://docs.digitalocean.com/reference/doctl/) and [`apm`](https://github.com/microsoft/apm)), and [direnv](https://direnv.net) to load them automatically when you enter the project directory.
 
 ## Setup
 
