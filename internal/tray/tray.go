@@ -10,6 +10,7 @@ import (
 
 	"fyne.io/systray"
 
+	"github.com/konhi/open-digitalocean-firewall-app/internal/autostart"
 	"github.com/konhi/open-digitalocean-firewall-app/internal/config"
 	"github.com/konhi/open-digitalocean-firewall-app/internal/digitalocean"
 	"github.com/konhi/open-digitalocean-firewall-app/internal/manager"
@@ -44,9 +45,10 @@ type menuHandles struct {
 	refreshItem     *systray.MenuItem
 	durMenuItem     *systray.MenuItem
 	durSubItems     map[int]*systray.MenuItem
-	autoUpdateItem  *systray.MenuItem
-	autoCleanupItem *systray.MenuItem
-	usernameItem    *systray.MenuItem
+	autoUpdateItem   *systray.MenuItem
+	autoCleanupItem  *systray.MenuItem
+	startAtLoginItem *systray.MenuItem
+	usernameItem     *systray.MenuItem
 }
 
 func (m *menuHandles) needsRebuild(snap manager.Snapshot) bool {
@@ -67,6 +69,7 @@ func (m *menuHandles) needsRebuild(snap manager.Snapshot) bool {
 type App struct {
 	mgr        *manager.Manager
 	tokenStore *config.TokenStore
+	autostart  autostart.Manager
 	logger     *log.Logger
 	icons      iconSet
 	menu       menuHandles
@@ -79,7 +82,7 @@ type App struct {
 	cleanupDone chan struct{}
 }
 
-func New(mgr *manager.Manager, tokenStore *config.TokenStore, logger *log.Logger) *App {
+func New(mgr *manager.Manager, tokenStore *config.TokenStore, autostartMgr autostart.Manager, logger *log.Logger) *App {
 	if logger == nil {
 		logger = log.Default()
 	}
@@ -87,6 +90,7 @@ func New(mgr *manager.Manager, tokenStore *config.TokenStore, logger *log.Logger
 	return &App{
 		mgr:         mgr,
 		tokenStore:  tokenStore,
+		autostart:   autostartMgr,
 		logger:      logger,
 		icons:       newIconSet(),
 		renderCh:    make(chan manager.Snapshot, 1),
@@ -400,6 +404,17 @@ func (a *App) rebuildMenu(parentCtx context.Context, snap manager.Snapshot) {
 		"Remove IPs added by this app when quitting",
 		snap.Settings.AutoCleanupOnQuit,
 	)
+	if a.autostart != nil {
+		startEnabled, err := a.autostart.IsEnabled()
+		if err != nil {
+			a.logger.Printf("check start at login failed: %v", err)
+		}
+		m.startAtLoginItem = settingsMenu.AddSubMenuItemCheckbox(
+			"Start at login",
+			"Launch Open DigitalOcean Firewall App automatically when you log in",
+			startEnabled,
+		)
+	}
 	settingsMenu.AddSeparator()
 
 	m.usernameItem = settingsMenu.AddSubMenuItem("", "Optional username included in DigitalOcean firewall rule descriptions")
@@ -433,6 +448,20 @@ func (a *App) rebuildMenu(parentCtx context.Context, snap manager.Snapshot) {
 			}
 		}
 	}()
+
+	if m.startAtLoginItem != nil {
+		item := m.startAtLoginItem
+		go func() {
+			for {
+				select {
+				case <-menuCtx.Done():
+					return
+				case <-item.ClickedCh:
+					a.toggleStartAtLogin(item)
+				}
+			}
+		}()
+	}
 
 	go func() {
 		for {
@@ -581,6 +610,30 @@ func (a *App) statusDot(snap manager.Snapshot) []byte {
 		return a.icons.dotActive
 	}
 	return a.icons.dotIdle
+}
+
+func (a *App) toggleStartAtLogin(item *systray.MenuItem) {
+	if a.autostart == nil {
+		return
+	}
+	enabled, err := a.autostart.IsEnabled()
+	if err != nil {
+		a.logger.Printf("check start at login failed: %v", err)
+		return
+	}
+	if enabled {
+		if err := a.autostart.Disable(); err != nil {
+			a.logger.Printf("disable start at login failed: %v", err)
+			return
+		}
+		item.Uncheck()
+		return
+	}
+	if err := a.autostart.Enable(); err != nil {
+		a.logger.Printf("enable start at login failed: %v", err)
+		return
+	}
+	item.Check()
 }
 
 func (a *App) configureUsername(current string) {

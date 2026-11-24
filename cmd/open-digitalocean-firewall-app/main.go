@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/konhi/open-digitalocean-firewall-app/internal/autostart"
 	"github.com/konhi/open-digitalocean-firewall-app/internal/config"
 	"github.com/konhi/open-digitalocean-firewall-app/internal/digitalocean"
 	"github.com/konhi/open-digitalocean-firewall-app/internal/ip"
@@ -58,7 +59,12 @@ func main() {
 		logger.Fatalf("failed to initialize manager: %v", err)
 	}
 
-	app := tray.New(mgr, tokenStore, logger)
+	autostartMgr, err := autostart.New()
+	if err != nil {
+		logger.Printf("warning: start at login unavailable: %v", err)
+	}
+
+	app := tray.New(mgr, tokenStore, autostartMgr, logger)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)

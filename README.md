@@ -12,6 +12,7 @@ This is extremely useful for letting your AI agents use MCPs and work with your 
 - **Auto-update on IP change**: automatically replaces your previously added IP with your new public IPv4 address when switching networks.
 - **Temporary access timers**: choose `15 minutes`, `1 hour`, `4 hours`, or `Until quit (no timer)` to automatically revoke access.
 - **Auto-cleanup on quit**: removes IPs added by this app when quitting (configurable in Settings).
+- **Start at login**: toggle automatic startup on login directly from the Settings menu (macOS LaunchAgent, Linux XDG autostart, Windows Registry).
 - **Secure token storage**: prompts for your token via a native GUI dialog on first run and stores it in your OS keyring (macOS Keychain, Linux Secret Service, Windows Credential Manager).
 
 ## Installation
