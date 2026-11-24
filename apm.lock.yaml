@@ -76,6 +76,20 @@ dependencies:
   - path: skills/antislop/LICENSE
     source: LICENSE
     hash: sha256:9fd83fb1fda52ca0094b96e2ed5a3d6c42a81b95a6c6326553f5bbe570f443de
+- repo_url: riekelt/principal-engineer
+  name: writing-unit-tests
+  host: github.com
+  resolved_commit: e67b7af9ac741945246012023ade5c2fee1222fa
+  version: unknown
+  virtual_path: plugins/principal-engineer/skills/writing-unit-tests
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/writing-unit-tests
+  - .agents/skills/writing-unit-tests/SKILL.md
+  deployed_file_hashes:
+    .agents/skills/writing-unit-tests/SKILL.md: sha256:28f503dfb66b73f4af2e0d33f48aa5df154b47c0a59c593d1307147ec985c255
+  content_hash: sha256:89b53c5d7ada2c26cb03b69374ec6e319794b540d402ec3f93f14a4acad957df
 deployments:
 - kind: project-relative
   target: antigravity
@@ -158,6 +172,24 @@ deployments:
   - hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
   active_owner: hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
   content_hash: sha256:3a5c2e06a1daa07600d03f48328d1479284e7a9d59d66b2663693ca972080e22
+- kind: project-relative
+  target: antigravity
+  value: .agents/skills/writing-unit-tests
+  runtime: null
+  scope: project
+  owners:
+  - riekelt/principal-engineer/plugins/principal-engineer/skills/writing-unit-tests
+  active_owner: riekelt/principal-engineer/plugins/principal-engineer/skills/writing-unit-tests
+  content_hash: null
+- kind: project-relative
+  target: antigravity
+  value: .agents/skills/writing-unit-tests/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - riekelt/principal-engineer/plugins/principal-engineer/skills/writing-unit-tests
+  active_owner: riekelt/principal-engineer/plugins/principal-engineer/skills/writing-unit-tests
+  content_hash: sha256:28f503dfb66b73f4af2e0d33f48aa5df154b47c0a59c593d1307147ec985c255
 local_deployed_files:
 - .agents/rules/environment-tooling.md
 - .agents/rules/project-rules.md

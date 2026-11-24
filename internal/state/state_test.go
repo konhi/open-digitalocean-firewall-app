@@ -1,75 +1,162 @@
 package state
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
 )
 
-func TestStore_LoadSaveRoundTrip(t *testing.T) {
-	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "nested", "state.json"))
+const testDeviceIP = "203.0.113.10"
+
+func TestStore_Load_ReturnsDefaultDataWhenFileDoesNotExist(t *testing.T) {
+	store, err := NewStore(filepath.Join(t.TempDir(), "missing", "state.json"))
 	if err != nil {
 		t.Fatalf("NewStore() error: %v", err)
 	}
 
-	initial, err := store.Load()
+	got, err := store.Load()
+
 	if err != nil {
-		t.Fatalf("Load() error: %v", err)
+		t.Fatalf("Load() unexpected error: %v", err)
 	}
-	if !initial.Settings.AutoUpdateOnIPChange || !initial.Settings.AutoCleanupOnQuit || initial.Settings.DefaultDurationMinutes != 60 {
-		t.Fatalf("unexpected default settings: %+v", initial.Settings)
+	wantSettings := Settings{
+		AutoUpdateOnIPChange:   true,
+		AutoCleanupOnQuit:      true,
+		DefaultDurationMinutes: 60,
 	}
-	if len(initial.ManagedRules) != 0 {
-		t.Fatalf("expected empty ManagedRules, got %v", initial.ManagedRules)
+	if got.Settings != wantSettings {
+		t.Fatalf("Load() settings = %+v, want %+v", got.Settings, wantSettings)
 	}
-
-	now := time.Now().UTC().Truncate(time.Second)
-	exp := now.Add(time.Hour)
-	initial.ManagedRules["cluster-1"] = ManagedRule{
-		IP:        "203.0.113.10",
-		AddedAt:   now,
-		ExpiresAt: &exp,
-	}
-	initial.Settings.DefaultDurationMinutes = 15
-	initial.Settings.AutoCleanupOnQuit = false
-
-	if err := store.Save(initial); err != nil {
-		t.Fatalf("Save() error: %v", err)
-	}
-
-	loaded, err := store.Load()
-	if err != nil {
-		t.Fatalf("Load() after save error: %v", err)
-	}
-
-	if loaded.Settings.DefaultDurationMinutes != 15 || loaded.Settings.AutoCleanupOnQuit {
-		t.Fatalf("settings did not round-trip: %+v", loaded.Settings)
-	}
-
-	rule, ok := loaded.ManagedRules["cluster-1"]
-	if !ok {
-		t.Fatal("expected cluster-1 rule to exist")
-	}
-	if rule.IP != "203.0.113.10" || rule.ExpiresAt == nil || !rule.ExpiresAt.Equal(exp) {
-		t.Fatalf("rule did not round-trip: %+v", rule)
+	if got.ManagedRules == nil || len(got.ManagedRules) != 0 {
+		t.Fatalf("Load() managed rules = %#v, want empty non-nil map", got.ManagedRules)
 	}
 }
 
-func TestManagedRule_IsExpired(t *testing.T) {
+func TestStore_SaveAndLoad_RoundTripsManagedRulesAndSettings(t *testing.T) {
+	store, err := NewStore(filepath.Join(t.TempDir(), "nested", "state.json"))
+	if err != nil {
+		t.Fatalf("NewStore() error: %v", err)
+	}
+
+	addedAt := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	expiresAt := time.Date(2026, 11, 20, 13, 0, 0, 0, time.UTC)
+	input := Data{
+		ManagedRules: map[string]ManagedRule{
+			"cluster-timed": {
+				IP:        testDeviceIP,
+				AddedAt:   addedAt,
+				ExpiresAt: &expiresAt,
+			},
+			"cluster-until-quit": {
+				IP:      testDeviceIP,
+				AddedAt: addedAt,
+			},
+		},
+		Settings: Settings{
+			AutoUpdateOnIPChange:   false,
+			AutoCleanupOnQuit:      false,
+			DefaultDurationMinutes: 15,
+			Username:               "jan",
+		},
+	}
+
+	if err := store.Save(input); err != nil {
+		t.Fatalf("Save() unexpected error: %v", err)
+	}
+	loaded, err := store.Load()
+
+	if err != nil {
+		t.Fatalf("Load() unexpected error: %v", err)
+	}
+	if loaded.Settings != input.Settings {
+		t.Fatalf("loaded settings = %+v, want %+v", loaded.Settings, input.Settings)
+	}
+	timed, ok := loaded.ManagedRules["cluster-timed"]
+	if !ok || timed.IP != testDeviceIP || !timed.AddedAt.Equal(addedAt) || timed.ExpiresAt == nil || !timed.ExpiresAt.Equal(expiresAt) {
+		t.Fatalf("cluster-timed did not round-trip: %+v", timed)
+	}
+	untilQuit, ok := loaded.ManagedRules["cluster-until-quit"]
+	if !ok || untilQuit.IP != testDeviceIP || untilQuit.ExpiresAt != nil {
+		t.Fatalf("cluster-until-quit did not round-trip: %+v", untilQuit)
+	}
+}
+
+func TestStore_Load_ReturnsErrorOnCorruptedJSON(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state.json")
+	if err := os.WriteFile(path, []byte("{invalid-json"), 0o600); err != nil {
+		t.Fatalf("WriteFile() error: %v", err)
+	}
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatalf("NewStore() error: %v", err)
+	}
+
+	_, err = store.Load()
+
+	if err == nil {
+		t.Fatal("Load() expected error for corrupted JSON, got nil")
+	}
+}
+
+func TestStore_Load_InitializesEmptyMapWhenManagedRulesIsNull(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state.json")
+	if err := os.WriteFile(path, []byte(`{"managed_rules":null,"settings":{"default_duration_minutes":240}}`), 0o600); err != nil {
+		t.Fatalf("WriteFile() error: %v", err)
+	}
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatalf("NewStore() error: %v", err)
+	}
+
+	loaded, err := store.Load()
+
+	if err != nil {
+		t.Fatalf("Load() unexpected error: %v", err)
+	}
+	if loaded.ManagedRules == nil {
+		t.Fatal("Load() returned nil ManagedRules map, want initialized empty map")
+	}
+	if loaded.Settings.DefaultDurationMinutes != 240 {
+		t.Fatalf("DefaultDurationMinutes = %d, want 240", loaded.Settings.DefaultDurationMinutes)
+	}
+}
+
+func TestManagedRule_IsExpired_ReturnsFalseWhenNoTimerSet(t *testing.T) {
 	now := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	rule := ManagedRule{IP: testDeviceIP, ExpiresAt: nil}
 
-	noTimer := ManagedRule{IP: "203.0.113.10"}
-	if noTimer.IsExpired(now) {
-		t.Fatal("rule without ExpiresAt should never expire")
+	if rule.IsExpired(now) {
+		t.Fatal("IsExpired() = true for rule without ExpiresAt, want false")
 	}
+}
 
-	future := now.Add(time.Minute)
-	if (ManagedRule{ExpiresAt: &future}).IsExpired(now) {
-		t.Fatal("future rule should not be expired")
+func TestManagedRule_IsExpired_ReturnsFalseBeforeExpiryTime(t *testing.T) {
+	now := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	future := time.Date(2026, 11, 20, 12, 1, 0, 0, time.UTC)
+	rule := ManagedRule{IP: testDeviceIP, ExpiresAt: &future}
+
+	if rule.IsExpired(now) {
+		t.Fatal("IsExpired() = true before ExpiresAt, want false")
 	}
+}
 
-	if !(ManagedRule{ExpiresAt: &now}).IsExpired(now) {
-		t.Fatal("rule expiring at now should be expired")
+func TestManagedRule_IsExpired_ReturnsTrueAtExactExpiryTime(t *testing.T) {
+	now := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	exact := now
+	rule := ManagedRule{IP: testDeviceIP, ExpiresAt: &exact}
+
+	if !rule.IsExpired(now) {
+		t.Fatal("IsExpired() = false at exact ExpiresAt boundary, want true")
+	}
+}
+
+func TestManagedRule_IsExpired_ReturnsTrueAfterExpiryTime(t *testing.T) {
+	now := time.Date(2026, 11, 20, 12, 5, 0, 0, time.UTC)
+	past := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	rule := ManagedRule{IP: testDeviceIP, ExpiresAt: &past}
+
+	if !rule.IsExpired(now) {
+		t.Fatal("IsExpired() = false after ExpiresAt, want true")
 	}
 }

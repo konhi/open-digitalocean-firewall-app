@@ -3,25 +3,20 @@ package config
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/zalando/go-keyring"
 )
 
 const (
-	EnvTokenVar    = "DIGITALOCEAN_TOKEN"
 	keyringService = "open-digitalocean-firewall-app"
 	keyringUser    = "digitalocean-api-token"
 )
 
-var ErrPromptCanceled = errors.New("token prompt canceled by user")
-
-type TokenSource string
-
-const (
-	SourceEnv     TokenSource = "env"
-	SourceKeyring TokenSource = "keyring"
+var (
+	ErrPromptCanceled = errors.New("token prompt canceled by user")
+	ErrNoPrompt       = errors.New("no token prompt configured")
+	ErrNoKeyring      = errors.New("no keyring configured")
 )
 
 // Keyring abstracts OS credential storage for testing.
@@ -49,61 +44,49 @@ type PromptFunc func(title, message string) (string, error)
 
 type TokenStore struct {
 	Keyring Keyring
-	Getenv  func(string) string
 	Prompt  PromptFunc
 }
 
 func NewTokenStore() *TokenStore {
 	return &TokenStore{
 		Keyring: osKeyring{},
-		Getenv:  os.Getenv,
 		Prompt:  promptForToken,
 	}
 }
 
-// Load reads a token from DIGITALOCEAN_TOKEN or the OS keyring without prompting.
-func (s *TokenStore) Load() (string, TokenSource, error) {
-	if s.Getenv != nil {
-		if tok := strings.TrimSpace(s.Getenv(EnvTokenVar)); tok != "" {
-			return tok, SourceEnv, nil
-		}
-	}
-
+// Load reads a saved token from the OS keyring without prompting.
+func (s *TokenStore) Load() (string, error) {
 	if s.Keyring != nil {
 		tok, err := s.Keyring.Get(keyringService, keyringUser)
 		if err == nil {
 			tok = strings.TrimSpace(tok)
 			if tok != "" {
-				return tok, SourceKeyring, nil
+				return tok, nil
 			}
 		} else if !errors.Is(err, keyring.ErrNotFound) {
-			return "", "", fmt.Errorf("read token from OS keyring: %w", err)
+			return "", fmt.Errorf("read token from OS keyring: %w", err)
 		}
 	}
 
-	return "", "", nil
+	return "", nil
 }
 
-// Resolve returns a token from env or OS keyring, or prompts via GUI and saves to OS keyring if missing.
-func (s *TokenStore) Resolve() (string, TokenSource, error) {
-	tok, src, err := s.Load()
+// Resolve returns a token from the OS keyring, or prompts via GUI and saves to the OS keyring if missing.
+func (s *TokenStore) Resolve() (string, error) {
+	tok, err := s.Load()
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	if tok != "" {
-		return tok, src, nil
+		return tok, nil
 	}
 
-	tok, err = s.PromptAndSave()
-	if err != nil {
-		return "", "", err
-	}
-	return tok, SourceKeyring, nil
+	return s.PromptAndSave()
 }
 
 func (s *TokenStore) PromptAndSave() (string, error) {
 	if s.Prompt == nil {
-		return "", errors.New("no token prompt configured")
+		return "", ErrNoPrompt
 	}
 
 	const title = "Open DigitalOcean Firewall App"
@@ -126,7 +109,7 @@ func (s *TokenStore) PromptAndSave() (string, error) {
 
 func (s *TokenStore) Save(token string) error {
 	if s.Keyring == nil {
-		return errors.New("no keyring configured")
+		return ErrNoKeyring
 	}
 	if err := s.Keyring.Set(keyringService, keyringUser, strings.TrimSpace(token)); err != nil {
 		return fmt.Errorf("save token to OS keyring: %w", err)

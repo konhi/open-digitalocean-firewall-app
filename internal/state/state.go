@@ -26,9 +26,10 @@ func (r ManagedRule) IsExpired(now time.Time) bool {
 }
 
 type Settings struct {
-	AutoUpdateOnIPChange   bool `json:"auto_update_on_ip_change"`
-	AutoCleanupOnQuit      bool `json:"auto_cleanup_on_quit"`
-	DefaultDurationMinutes int  `json:"default_duration_minutes"` // 0 means until quit (no timer)
+	AutoUpdateOnIPChange   bool   `json:"auto_update_on_ip_change"`
+	AutoCleanupOnQuit      bool   `json:"auto_cleanup_on_quit"`
+	DefaultDurationMinutes int    `json:"default_duration_minutes"` // 0 means until quit (no timer)
+	Username               string `json:"username,omitempty"`
 }
 
 func DefaultSettings() Settings {

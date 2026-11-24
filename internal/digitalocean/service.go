@@ -2,8 +2,11 @@ package digitalocean
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
+
+var ErrEmptyIP = errors.New("IP address must be non-empty")
 
 func HasIP(rules []FirewallRule, ip string) bool {
 	if ip == "" {
@@ -24,9 +27,9 @@ type MutationResult struct {
 }
 
 // AddIP fetches the latest rules before appending ip so concurrent changes are preserved.
-func AddIP(ctx context.Context, client Client, clusterID, ip string) (MutationResult, error) {
+func AddIP(ctx context.Context, client Client, clusterID, ip, description string) (MutationResult, error) {
 	if ip == "" {
-		return MutationResult{}, fmt.Errorf("cannot add empty IP")
+		return MutationResult{}, fmt.Errorf("cannot add IP: %w", ErrEmptyIP)
 	}
 
 	rules, err := client.GetFirewallRules(ctx, clusterID)
@@ -43,8 +46,9 @@ func AddIP(ctx context.Context, client Client, clusterID, ip string) (MutationRe
 	}
 
 	updated := append(append([]FirewallRule(nil), rules...), FirewallRule{
-		Type:  RuleTypeIPAddr,
-		Value: ip,
+		Type:        RuleTypeIPAddr,
+		Value:       ip,
+		Description: description,
 	})
 
 	if err := client.UpdateFirewallRules(ctx, clusterID, updated); err != nil {
@@ -61,7 +65,7 @@ func AddIP(ctx context.Context, client Client, clusterID, ip string) (MutationRe
 // RemoveIP fetches the latest rules and removes only the ip_addr rule matching ip.
 func RemoveIP(ctx context.Context, client Client, clusterID, ip string) (MutationResult, error) {
 	if ip == "" {
-		return MutationResult{}, fmt.Errorf("cannot remove empty IP")
+		return MutationResult{}, fmt.Errorf("cannot remove IP: %w", ErrEmptyIP)
 	}
 
 	rules, err := client.GetFirewallRules(ctx, clusterID)
@@ -99,12 +103,12 @@ func RemoveIP(ctx context.Context, client Client, clusterID, ip string) (Mutatio
 }
 
 // ReplaceIP swaps oldIP for newIP in a single UpdateFirewallRules call, leaving all other rules untouched.
-func ReplaceIP(ctx context.Context, client Client, clusterID, oldIP, newIP string) (MutationResult, error) {
+func ReplaceIP(ctx context.Context, client Client, clusterID, oldIP, newIP, description string) (MutationResult, error) {
 	if oldIP == "" || newIP == "" {
-		return MutationResult{}, fmt.Errorf("both oldIP and newIP must be non-empty")
+		return MutationResult{}, fmt.Errorf("both oldIP and newIP required: %w", ErrEmptyIP)
 	}
 	if oldIP == newIP {
-		return AddIP(ctx, client, clusterID, newIP)
+		return AddIP(ctx, client, clusterID, newIP, description)
 	}
 
 	rules, err := client.GetFirewallRules(ctx, clusterID)
@@ -128,8 +132,9 @@ func ReplaceIP(ctx context.Context, client Client, clusterID, oldIP, newIP strin
 
 	if !hasNew {
 		updated = append(updated, FirewallRule{
-			Type:  RuleTypeIPAddr,
-			Value: newIP,
+			Type:        RuleTypeIPAddr,
+			Value:       newIP,
+			Description: description,
 		})
 	}
 

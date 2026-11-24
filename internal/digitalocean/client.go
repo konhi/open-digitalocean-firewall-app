@@ -3,6 +3,7 @@ package digitalocean
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sort"
 
 	"github.com/digitalocean/godo"
@@ -23,6 +24,19 @@ type FirewallRule struct {
 	ClusterUUID string
 	Type        string
 	Value       string
+	Description string
+}
+
+type firewallRulePayload struct {
+	UUID        string `json:"uuid,omitempty"`
+	ClusterUUID string `json:"cluster_uuid,omitempty"`
+	Type        string `json:"type"`
+	Value       string `json:"value"`
+	Description string `json:"description,omitempty"`
+}
+
+type firewallRulesEnvelope struct {
+	Rules []firewallRulePayload `json:"rules"`
 }
 
 type Client interface {
@@ -83,39 +97,39 @@ func (c *GodoClient) ListDatabases(ctx context.Context) ([]Database, error) {
 }
 
 func (c *GodoClient) GetFirewallRules(ctx context.Context, clusterID string) ([]FirewallRule, error) {
-	godoRules, _, err := c.client.Databases.GetFirewallRules(ctx, clusterID)
+	path := fmt.Sprintf("v2/databases/%s/firewall", clusterID)
+	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
+		return nil, fmt.Errorf("build get firewall rules request for %s: %w", clusterID, err)
+	}
+
+	var env firewallRulesEnvelope
+	if _, err := c.client.Do(ctx, req, &env); err != nil {
 		return nil, fmt.Errorf("get firewall rules for %s: %w", clusterID, err)
 	}
 
-	rules := make([]FirewallRule, 0, len(godoRules))
-	for _, r := range godoRules {
-		rules = append(rules, FirewallRule{
-			UUID:        r.UUID,
-			ClusterUUID: r.ClusterUUID,
-			Type:        r.Type,
-			Value:       r.Value,
-		})
+	rules := make([]FirewallRule, 0, len(env.Rules))
+	for _, r := range env.Rules {
+		rules = append(rules, FirewallRule(r))
 	}
 	return rules, nil
 }
 
 // UpdateFirewallRules replaces the trusted sources for a database cluster.
 func (c *GodoClient) UpdateFirewallRules(ctx context.Context, clusterID string, rules []FirewallRule) error {
-	reqRules := make([]*godo.DatabaseFirewallRule, 0, len(rules))
+	payload := firewallRulesEnvelope{
+		Rules: make([]firewallRulePayload, 0, len(rules)),
+	}
 	for _, r := range rules {
-		reqRules = append(reqRules, &godo.DatabaseFirewallRule{
-			UUID:        r.UUID,
-			ClusterUUID: r.ClusterUUID,
-			Type:        r.Type,
-			Value:       r.Value,
-		})
+		payload.Rules = append(payload.Rules, firewallRulePayload(r))
 	}
 
-	req := &godo.DatabaseUpdateFirewallRulesRequest{
-		Rules: reqRules,
+	path := fmt.Sprintf("v2/databases/%s/firewall", clusterID)
+	req, err := c.client.NewRequest(ctx, http.MethodPut, path, payload)
+	if err != nil {
+		return fmt.Errorf("build update firewall rules request for %s: %w", clusterID, err)
 	}
-	if _, err := c.client.Databases.UpdateFirewallRules(ctx, clusterID, req); err != nil {
+	if _, err := c.client.Do(ctx, req, nil); err != nil {
 		return fmt.Errorf("update firewall rules for %s: %w", clusterID, err)
 	}
 	return nil

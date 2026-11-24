@@ -16,6 +16,7 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             go
+            golangci-lint
             gopls
             opentofu
             terraform-ls
@@ -25,7 +26,6 @@
           ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
             pkg-config
             libayatana-appindicator
-            gtk3
           ];
 
           # Regenerate AGENTS.md from .apm/ whenever the dev shell is entered (direnv).

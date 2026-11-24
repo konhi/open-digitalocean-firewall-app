@@ -26,7 +26,7 @@ func main() {
 	tokenStore := config.NewTokenStore()
 
 	var doClient digitalocean.Client
-	tok, src, err := tokenStore.Resolve()
+	tok, err := tokenStore.Resolve()
 	if err != nil {
 		if errors.Is(err, config.ErrPromptCanceled) {
 			logger.Printf("no DigitalOcean token configured yet; configure one from the tray menu")
@@ -34,7 +34,7 @@ func main() {
 			logger.Printf("warning: failed to resolve DigitalOcean token: %v", err)
 		}
 	} else if tok != "" {
-		logger.Printf("loaded DigitalOcean token from %s", src)
+		logger.Printf("loaded DigitalOcean token from OS keyring")
 		doClient = digitalocean.NewClient(tok)
 	}
 

@@ -12,7 +12,7 @@ This is extremely useful for letting your AI agents use MCPs and work with your 
 - **Auto-update on IP change**: automatically replaces your previously added IP with your new public IPv4 address when switching networks.
 - **Temporary access timers**: choose `15 minutes`, `1 hour`, `4 hours`, or `Until quit (no timer)` to automatically revoke access.
 - **Auto-cleanup on quit**: removes IPs added by this app when quitting (configurable in Settings).
-- **Secure token storage**: reads `DIGITALOCEAN_TOKEN` from the environment if set, otherwise stores and loads your token from the OS keyring (macOS Keychain, Linux Secret Service, Windows Credential Manager) with a native GUI prompt on first run.
+- **Secure token storage**: prompts for your token via a native GUI dialog on first run and stores it in your OS keyring (macOS Keychain, Linux Secret Service, Windows Credential Manager).
 
 ## Running
 
@@ -27,7 +27,7 @@ go build -o bin/open-digitalocean-firewall-app ./cmd/open-digitalocean-firewall-
 ./bin/open-digitalocean-firewall-app
 ```
 
-On first launch, if `DIGITALOCEAN_TOKEN` is not set and no token is saved in your OS keyring, Open DigitalOcean Firewall App will prompt you for your DigitalOcean personal access token (`database:read` and `database:update` scopes).
+On first launch, if no token is saved in your OS keyring, Open DigitalOcean Firewall App will prompt you for your DigitalOcean personal access token (`database:read` and `database:update` scopes).
 
 ## Development & Contributing
 

@@ -13,6 +13,7 @@ dependencies:
     - git: miqdadbadjuber/anti-slop
       skills:
         - antislop-code
+    - riekelt/principal-engineer/plugins/principal-engineer/skills/writing-unit-tests
   mcp: []
 includes: auto
 scripts: {}

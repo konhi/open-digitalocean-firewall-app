@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/konhi/open-digitalocean-firewall-app/internal/ip"
 	"github.com/konhi/open-digitalocean-firewall-app/internal/state"
 )
+
+var ErrNoTokenConfigured = errors.New("DigitalOcean API token is not configured")
 
 type DatabaseStatus struct {
 	Database  digitalocean.Database
@@ -299,6 +302,7 @@ func (m *Manager) reconcileManagedRules(ctx context.Context, client digitalocean
 	m.mu.Lock()
 	now := m.now()
 	autoUpdate := m.data.Settings.AutoUpdateOnIPChange
+	username := m.data.Settings.Username
 	rulesCopy := make(map[string]state.ManagedRule, len(m.data.ManagedRules))
 	for k, v := range m.data.ManagedRules {
 		rulesCopy[k] = v
@@ -326,7 +330,8 @@ func (m *Manager) reconcileManagedRules(ctx context.Context, client digitalocean
 
 		if autoUpdate && curIP != "" && rule.IP != "" && rule.IP != curIP {
 			m.logger.Printf("replacing managed IP on cluster %s: %s -> %s", clusterID, rule.IP, curIP)
-			if _, err := digitalocean.ReplaceIP(ctx, client, clusterID, rule.IP, curIP); err != nil {
+			desc := FormatRuleDescription(username, rule.AddedAt, rule.ExpiresAt)
+			if _, err := digitalocean.ReplaceIP(ctx, client, clusterID, rule.IP, curIP, desc); err != nil {
 				errs = append(errs, fmt.Errorf("replace IP on %s: %w", clusterID, err))
 				continue
 			}
@@ -347,7 +352,7 @@ func (m *Manager) ToggleDatabase(ctx context.Context, clusterID string) error {
 	client := m.client
 	if client == nil {
 		m.mu.Unlock()
-		return errors.New("DigitalOcean API token is not configured")
+		return ErrNoTokenConfigured
 	}
 	curIP := m.currentIP
 	isAllowed := false
@@ -381,6 +386,7 @@ func (m *Manager) addToCluster(ctx context.Context, client digitalocean.Client, 
 	m.mu.Lock()
 	m.busy = true
 	durationMin := m.data.Settings.DefaultDurationMinutes
+	username := m.data.Settings.Username
 	now := m.now()
 	m.mu.Unlock()
 	m.notify()
@@ -392,18 +398,19 @@ func (m *Manager) addToCluster(ctx context.Context, client digitalocean.Client, 
 		m.notify()
 	}()
 
-	res, err := digitalocean.AddIP(ctx, client, clusterID, ipAddr)
+	var expiresAt *time.Time
+	if durationMin > 0 {
+		t := now.Add(time.Duration(durationMin) * time.Minute)
+		expiresAt = &t
+	}
+
+	desc := FormatRuleDescription(username, now, expiresAt)
+	res, err := digitalocean.AddIP(ctx, client, clusterID, ipAddr, desc)
 	if err != nil {
 		m.mu.Lock()
 		m.lastErr = err.Error()
 		m.mu.Unlock()
 		return err
-	}
-
-	var expiresAt *time.Time
-	if durationMin > 0 {
-		t := now.Add(time.Duration(durationMin) * time.Minute)
-		expiresAt = &t
 	}
 
 	m.mu.Lock()
@@ -486,7 +493,7 @@ func (m *Manager) AllowAll(ctx context.Context) error {
 	client := m.client
 	if client == nil {
 		m.mu.Unlock()
-		return errors.New("DigitalOcean API token is not configured")
+		return ErrNoTokenConfigured
 	}
 	curIP := m.currentIP
 	ids := make([]string, len(m.databases))
@@ -520,7 +527,7 @@ func (m *Manager) RemoveAll(ctx context.Context) error {
 	client := m.client
 	if client == nil {
 		m.mu.Unlock()
-		return errors.New("DigitalOcean API token is not configured")
+		return ErrNoTokenConfigured
 	}
 	curIP := m.currentIP
 	type target struct {
@@ -613,4 +620,28 @@ func (m *Manager) SetAutoCleanupOnQuit(enabled bool) {
 	m.saveStateLocked()
 	m.mu.Unlock()
 	m.notify()
+}
+
+func (m *Manager) SetUsername(username string) {
+	m.mu.Lock()
+	m.data.Settings.Username = strings.TrimSpace(username)
+	m.saveStateLocked()
+	m.mu.Unlock()
+	m.notify()
+}
+
+// FormatRuleDescription builds the DigitalOcean firewall rule description with optional username and deletion date.
+func FormatRuleDescription(username string, addedAt time.Time, expiresAt *time.Time) string {
+	var deletePart string
+	if expiresAt != nil {
+		deletePart = "delete after " + expiresAt.UTC().Format("2006-01-02 15:04 UTC")
+	} else {
+		deletePart = "delete on quit (added " + addedAt.UTC().Format("2006-01-02") + ")"
+	}
+
+	name := strings.TrimSpace(username)
+	if name == "" {
+		return deletePart
+	}
+	return name + " - " + deletePart
 }

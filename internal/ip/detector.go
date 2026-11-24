@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+var (
+	ErrUnexpectedStatus = errors.New("unexpected HTTP status")
+	ErrNotIPv4          = errors.New("expected IPv4 address")
+)
+
 // DefaultEndpoints are public IPv4 echo services queried in order until one succeeds.
 var DefaultEndpoints = []string{
 	"https://api.ipify.org",
@@ -72,10 +77,10 @@ func (d *HTTPDetector) fetch(ctx context.Context, client *http.Client, endpoint 
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status %d", resp.StatusCode)
+		return "", fmt.Errorf("%w: %d", ErrUnexpectedStatus, resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 128))
@@ -89,7 +94,7 @@ func (d *HTTPDetector) fetch(ctx context.Context, client *http.Client, endpoint 
 		return "", fmt.Errorf("invalid IP response %q: %w", raw, err)
 	}
 	if !addr.Is4() {
-		return "", fmt.Errorf("expected IPv4 address, got %q", raw)
+		return "", fmt.Errorf("%w: got %q", ErrNotIPv4, raw)
 	}
 
 	return addr.String(), nil

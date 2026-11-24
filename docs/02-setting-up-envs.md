@@ -4,7 +4,7 @@ Part of [Contributing to Open DigitalOcean Firewall App](../CONTRIBUTING.md).
 
 ## DigitalOcean API token
 
-Open DigitalOcean Firewall App talks to DigitalOcean with a personal access token, which is read from the `DIGITALOCEAN_TOKEN` environment variable (also used by the OpenTofu DigitalOcean provider). DigitalOcean has no API for creating these tokens, so you create one in the control panel.
+Open DigitalOcean Firewall App talks to DigitalOcean with a personal access token (entered via the app's GUI prompt and stored in your OS keyring). For local development and test infrastructure, OpenTofu and `doctl` use a token stored in `.env.local` as `DIGITALOCEAN_TOKEN` (the app itself never reads `DIGITALOCEAN_TOKEN` from the environment). DigitalOcean has no API for creating these tokens, so you create one in the control panel.
 
 ### Create the token
 

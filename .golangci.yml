@@ -1,0 +1,11 @@
+version: "2"
+
+linters:
+  enable:
+    - err113
+    - goconst
+  settings:
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+      ignore-tests: false
