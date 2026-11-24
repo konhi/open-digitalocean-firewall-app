@@ -14,7 +14,34 @@ This is extremely useful for letting your AI agents use MCPs and work with your 
 - **Auto-cleanup on quit**: removes IPs added by this app when quitting (configurable in Settings).
 - **Secure token storage**: prompts for your token via a native GUI dialog on first run and stores it in your OS keyring (macOS Keychain, Linux Secret Service, Windows Credential Manager).
 
-## Running
+## Installation
+
+### Homebrew (macOS & Linux)
+
+```sh
+brew tap konhi/tap
+brew install open-digitalocean-firewall-app
+```
+
+Or in a single command:
+
+```sh
+brew install konhi/tap/open-digitalocean-firewall-app
+```
+
+To start Open DigitalOcean Firewall App in the background and automatically at login:
+
+```sh
+brew services start open-digitalocean-firewall-app
+```
+
+Or run it directly:
+
+```sh
+open-digitalocean-firewall-app
+```
+
+### From Source
 
 ```sh
 go run ./cmd/open-digitalocean-firewall-app

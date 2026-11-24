@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -15,7 +17,20 @@ import (
 	"github.com/konhi/open-digitalocean-firewall-app/internal/tray"
 )
 
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
+	showVersion := flag.Bool("version", false, "print version and exit")
+	flag.Parse()
+	if *showVersion {
+		fmt.Printf("Open DigitalOcean Firewall App %s (commit %s, built %s)\n", version, commit, date)
+		return
+	}
+
 	logger := log.New(os.Stderr, "Open DigitalOcean Firewall App: ", log.LstdFlags)
 
 	store, err := state.NewStore("")

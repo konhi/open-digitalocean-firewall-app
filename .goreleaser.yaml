@@ -1,0 +1,79 @@
+version: 2
+
+project_name: open-digitalocean-firewall-app
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: darwin
+    main: ./cmd/open-digitalocean-firewall-app
+    binary: open-digitalocean-firewall-app
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+    goarch:
+      - arm64
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  - id: linux
+    main: ./cmd/open-digitalocean-firewall-app
+    binary: open-digitalocean-firewall-app
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+brews:
+  - name: open-digitalocean-firewall-app
+    repository:
+      owner: konhi
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/konhi/open-digitalocean-firewall-app"
+    description: "System tray app to manage your IP in DigitalOcean managed database firewalls"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    service: |
+      run [opt_bin/"open-digitalocean-firewall-app"]
+      keep_alive true
+      process_type :interactive
+      log_path var/"log/open-digitalocean-firewall-app.log"
+      error_log_path var/"log/open-digitalocean-firewall-app.log"
+    caveats: |
+      To start Open DigitalOcean Firewall App now and restart at login:
+        brew services start open-digitalocean-firewall-app
+
+      Or run it directly:
+        open-digitalocean-firewall-app
+    test: |
+      assert_match version.to_s, shell_output("#{bin}/open-digitalocean-firewall-app --version")
